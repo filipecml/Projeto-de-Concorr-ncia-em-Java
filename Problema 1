@@ -1,0 +1,77 @@
+public class Contacompartilhada {
+    private double saldo_inicial;
+
+
+    public Contacompartilhada(double saldo_inicial) {
+        this.saldo_inicial = saldo_inicial;
+    }
+
+    public void Depositar(double quantidade) {
+
+        saldo_inicial += quantidade;
+        System.out.println("Foram depositados " + quantidade + " reais na conta bancária");
+        System.out.println("Saldo atual: " + saldo_inicial);
+    }
+
+    public void Sacar(double quantidade) {
+
+        if (saldo_inicial >= quantidade) {
+            saldo_inicial -= quantidade;
+            System.out.println("Foram sacados " + quantidade + " reais na conta bancária");
+            System.out.println("Saldo atual: " + saldo_inicial);
+        }
+
+        else {
+            System.out.println("Não é possível sacar essa quantia de dinheiro");
+        }
+    }
+
+    public static void main(String[] args) {
+
+        Contacompartilhada contacompartilhada = new Contacompartilhada(1000);
+
+        Runnable tarefa_deposito = () -> {
+            for (int i = 0; i < 10; i++) {
+                contacompartilhada.Depositar(10);
+
+                try{
+                    Thread.sleep(150);
+                } catch (InterruptedException e) {
+                    System.out.println("Erro na execução do programa");
+                }
+            }
+        };
+
+        Runnable tarefa_sacar = () -> {
+            for (int i = 0; i < 10; i++) {
+                contacompartilhada.Sacar(15);
+            }
+            try {
+                Thread.sleep(150);
+            } catch (InterruptedException e) {
+                System.out.println("Erro na execução do programa");
+            }
+        };
+
+        Thread thread1 = new Thread(tarefa_deposito, "Depositor 1");
+        Thread thread2 = new Thread(tarefa_sacar, "Sacador 1");
+        Thread thread3 = new Thread(tarefa_deposito, "Depositor 2");
+        Thread thread4 = new Thread(tarefa_sacar, "Sacador 2");
+
+        thread1.start();
+        thread2.start();
+        thread3.start();
+        thread4.start();
+
+        try {
+            thread1.join();
+            thread2.join();
+            thread3.join();
+            thread4.join();
+        } catch (InterruptedException e) {
+            System.out.println("Erro na execução do programa");
+        }
+
+    }
+
+}
