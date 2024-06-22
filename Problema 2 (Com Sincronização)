@@ -1,0 +1,46 @@
+import java.util.concurrent.Semaphore;
+
+public class Pontecomconcorrencia {
+    private static final int numero_carros = 10;
+    private static final Semaphore semaforo = new Semaphore(1);
+
+    public static void main(String[] args) {
+
+        for (int i = 1; i <= numero_carros; i++) {
+            Thread carro = new Thread(new Carro(i));
+            carro.start();
+        }
+    }
+
+
+    public static class Carro implements Runnable {
+        private final int id;
+
+        public Carro(int id) {
+            this.id = id;
+        }
+
+        @Override
+        public void run() {
+            try {
+                System.out.println("Carro de indíce " + id + " está se aproximando da ponte");
+
+
+                semaforo.acquire();
+                System.out.println("Carro de indice " + id + "está atravessando a ponte");
+
+
+                Thread.sleep(500);
+
+                System.out.println("Carro de indíce " + id + "acaba de atravessar a ponte");
+                semaforo.release();
+
+            } catch (InterruptedException e) {
+                System.out.println("Erro na execução do programa");
+            }
+        }
+
+
+    }
+
+}
