@@ -1,0 +1,33 @@
+public class Pontesemsincronia {
+
+    private static final int numero_carros = 10;
+
+    public static void main(String[] args) {
+        for (int i = 1; i <= numero_carros; i++) {
+            Thread carro = new Thread(new Carro(i));
+            carro.start();
+        }
+    }
+
+    public static class Carro implements Runnable {
+        private final int id;
+
+        public Carro(int id) {
+            this.id = id;
+        }
+        @Override
+        public void run() {
+            try {
+                System.out.println("Carro de indice " + id + " está se aproximando da ponte");
+
+                Thread.sleep(500);
+
+                System.out.println("Carro de indice " + id + " acaba de atravessar a ponte");
+
+            } catch (InterruptedException e){
+                System.out.println("Erro na execução do sistema");
+            }
+        }
+    }
+
+}
