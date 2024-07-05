@@ -1,0 +1,123 @@
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore; // Importamos o semáforo e o reetrant lock para a concorrência
+
+public class Barbearia {
+
+    private final int quantidade_assentos;
+    private final Semaphore quantidade_assentos_disponiveis;
+    private final Semaphore barbeiro_dormindo;
+    private final Semaphore barbeiro_ativo;
+
+    private final ReentrantLock lock;
+
+    public Barbearia(int quantidade_assentos) {
+        this.quantidade_assentos = quantidade_assentos;
+        this.quantidade_assentos_disponiveis = new Semaphore(quantidade_assentos);
+        this.barbeiro_ativo = new Semaphore(0);
+        this.barbeiro_dormindo = new Semaphore(1);
+        this.lock = new ReentrantLock();
+    } // Na classe construtora, definimos a quantidade de assentos no total, declaramos os semáforos que são a quantidade de assentos ainda disponíveis, o barbeiro ativo (cortando ou nãao o cabelo), e o barbeiro dormindo
+
+    public void entrar(int indice) throws InterruptedException {
+
+        lock.lock(); // Trancar o processo na região crítica
+        System.out.println("O cliente de indice " + indice + " acaba de entrar na barbearia");
+        // Verificamos se ainda há algum assento disponível para alocar o cliente
+        if (quantidade_assentos_disponiveis.availablePermits() > 0) {
+            quantidade_assentos_disponiveis.acquire(); // Reservamos um lugar para a pessoa que acabou de entrar
+
+
+            barbeiro_dormindo.release();
+            System.out.println("O barbeiro acaba de acordar");
+            barbeiro_ativo.acquire(); // Colocamos release no barbeiro dormindo e acquire no barbeiro ativo para dizer que ele sairá do sono e entrará no processo de cortar o cabelo
+
+            System.out.println("O barbeiro está realizando o corte do cliente de indice " + indice);
+
+            Thread.sleep(2000); // Simula o tempo de corte do barbeiro
+            System.out.println("O barbeiro acaba de concluir o corte do cliente de indice " + indice);
+
+            quantidade_assentos_disponiveis.release(); // liberamos o espaço para o próximo cliente
+            lock.unlock(); // Liberar o processo na região crítica usando lock
+        } else {
+            lock.unlock(); // Liberar o processo na região crítica usando lock
+            System.out.println("O cliente de indice " + indice + " teve que sair da barbearia pois todos os assentos de espera já estão ocupados");
+        } // Caso não tenha lugar disponível, entramos no else, onde o cliente sai da loja
+
+    }
+
+    public void barbear() throws InterruptedException {
+        while (true) {
+            try {
+                if (quantidade_assentos_disponiveis.availablePermits() == quantidade_assentos) {
+                    barbeiro_dormindo.acquire();
+                    System.out.println("O barbeiro está dormindo");
+                }
+                // Usamos a função de barbear para o barbeiro voltar a dormir, até o processo de chegar um novo cliente
+                barbeiro_ativo.release();
+                Thread.sleep(2000); // Simulamos o tempo de descanso do barbeiro a partir da função sleep
+            } catch (InterruptedException e) {
+                System.out.println("Erro execução do programa");
+            }
+        }
+    }
+}
+
+class Cliente extends Thread {
+
+    private final int indice_cliente;
+    private final Barbearia barbearia;
+    // Declaramos o índice do cliente e o objeto barbearia para usufruir das funções da classe da barbearia
+    public Cliente(int indice_cliente, Barbearia barbearia) {
+        this.indice_cliente = indice_cliente;
+        this.barbearia = barbearia;
+    } // Criação da classe cliente para utilizar a função de entrar na barbearia.
+
+    public void run() {
+        try {
+            barbearia.entrar(indice_cliente);
+        } catch (InterruptedException e) {
+            System.out.println("Erro na execução do programa");
+        }
+    }
+
+}
+
+class Barbeiro extends Thread {
+
+    private final Barbearia barbearia;
+
+    public Barbeiro(Barbearia barbearia) {
+        this.barbearia = barbearia;
+    } // Criamos uma classe do barbeiro para utilizar a função de barbear e declaramos o seu objeto como barbearia, para usufruir da funçaõ de barbear da classe princiapl
+
+    public void run() {
+        try {
+            barbearia.barbear();
+        } catch (InterruptedException e) {
+            System.out.println("Erro na execução do programa");
+        }
+    }
+}
+
+public class Main{
+    public static void main(String[] args) {
+        Barbearia barbearia = new Barbearia(100); // Declaramos a barbearia com 100 espaços disponiveis
+        Barbeiro barbeiro = new Barbeiro(barbearia);
+        barbeiro.start(); // Criação da função main, para deixar o barbeiro em posição inicial de repouso
+
+        for (int i = 0; i < 10; i++) {
+            Cliente cliente = new Cliente(i, barbearia);
+            cliente.start(); // Rodamos as threads dos clientes
+        }
+
+        try {
+            Thread.sleep(1000); // Simulamos um tempo de demora para o corte de cada cliente
+        } catch (InterruptedException e) {
+            System.out.println("Erro na execução do programa");
+        }
+
+    }
+}
+
+
+
