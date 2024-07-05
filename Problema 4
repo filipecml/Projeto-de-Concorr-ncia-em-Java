@@ -1,0 +1,41 @@
+import java.util.concurrent.Semaphore; // Importamos o semáforo
+
+public class Cliente extends Thread implements Runnable {
+    private static final Semaphore assentos = new Semaphore(5); // Declaramos os assentos como semáforos que podem permitir até 5 lugares ocupados de uma vez
+    private final int id;
+
+    public Cliente(int id) {
+        this.id = id;
+    } // Colocamos a classe construtora do cliente onde recebemos o id como parametro
+
+    @Override
+
+    public void run() {
+        try {
+            System.out.println("Cliente de indice " + id + " acaba de entrar no restaurante");
+
+            assentos.acquire(); // Tenta entrar no restaurante
+
+            System.out.println("Cliente de indice " + id + " está jantando na mesa do restaurante"); // Caso consiga entrar no restaurante, printamos a mensagem de sucesso e colocamos a pessoa para sentar na mesa
+            
+            Thread.sleep(2000);
+
+            System.out.println("Cliente de indice " + id + " acaba de sair da mesa de restaurante liberando uma cadeira para outra pessoa");
+
+            assentos.release(); // Após terminar de comer, o cliente sai da mesa e libera espaço denytro dela
+
+        } catch (InterruptedException e) {
+            System.out.println("Erro na execução do programa");
+        }
+    }
+}
+
+public class Restaurante {
+    public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
+            Thread cliente = new Cliente(i);
+            cliente.start(); // Declaramos cada Thread dentro do loop e colocamos a Thread para rodar com o comando start()
+        } // Colocamos a classe do restaurante e dentro dela rodamos a main
+
+    }
+}
