@@ -1,41 +1,69 @@
-import java.util.concurrent.Semaphore; // Importamos o semáforo
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock; // Importamos o semáforo e o sistema de lock 
 
-public class Cliente extends Thread implements Runnable {
-    private static final Semaphore assentos = new Semaphore(5); // Declaramos os assentos como semáforos que podem permitir até 5 lugares ocupados de uma vez
-    private final int id;
 
-    public Cliente(int id) {
-        this.id = id;
-    } // Colocamos a classe construtora do cliente onde recebemos o id como parametro
+public class Restaurante {
+    private final Semaphore cadeiraslivres = new Semaphore(5, true);
+    private int cadeiras_ocupadas = 0;
+    private int pessoas_querendo_sair = 0;
+    private final ReentrantLock lock = new ReentrantLock();
 
-    @Override
+   // Inicializamos como 0 o número de cadeiras ocupadas e pessoas que querem sair do restaurante, também inicializamos o lock para restringir o acesso a região crítica e o semáforo de cadeiras livres
+    public void entrar(int indice_clientes) throws InterruptedException {
+        cadeiraslivres.acquire(); // Tentamos pegar uma mesa para o cliente
+        lock.lock(); // trancamos o sistema para dar acesso limitado a região crítica 
 
-    public void run() {
         try {
-            System.out.println("Cliente de indice " + id + " acaba de entrar no restaurante");
+            cadeiras_ocupadas++; // Caso o cliente consiga espaço, colocamos ele na mesa
+            System.out.println("Cliente " + indice_clientes + " acabou de sentar na mesa");
+            System.out.println("Agora existem: " + cadeiras_ocupadas + " ocupando a mesa");
+        } finally {
+            lock.unlock(); // Destrancamos o acesso a região critica 
+        }
+    }
 
-            assentos.acquire(); // Tenta entrar no restaurante
+    public void sair(int indice_clientes) throws InterruptedException {
+        lock.lock(); // Mais uma vez trancamos o sistema para restringir o acesso a rgião crítica
+        try {
+            pessoas_querendo_sair++; // Aumentamos o numero de pessoas que querem sair da mesa 
+            System.out.println("Cliente " + indice_clientes + " quer sair da mesa");
+            System.out.println("Agora existem: " + pessoas_querendo_sair + " querendo sair da mesa");
 
-            System.out.println("Cliente de indice " + id + " está jantando na mesa do restaurante"); // Caso consiga entrar no restaurante, printamos a mensagem de sucesso e colocamos a pessoa para sentar na mesa
-            
-            Thread.sleep(2000);
+            if (pessoas_querendo_sair == cadeiras_ocupadas) { 
+                // Caso todos os clientes da mesa queiram sair, todos eles saem do restaurante e reinicializamos as variaveis de inicio
+                System.out.println("Todos os clientes da mesa estão saindo");
+                cadeiras_ocupadas = 0;
+                pessoas_querendo_sair = 0;
+                cadeiraslivres.release(5);
+            }
+        } finally {
+            lock.unlock(); // Mais uma vez destrancamos o acesso a região crítica 
+        }
+    }
 
-            System.out.println("Cliente de indice " + id + " acaba de sair da mesa de restaurante liberando uma cadeira para outra pessoa");
+    private static void criar_clientes(Restaurante restaurante, int indice_clientes) {
+        new Thread(() -> {
+            // Criamos uma função unica apenas para a criação dos clientes e o uso das funções de entrada e saida do restaurante
+            // Simulamos o processo de entrada e saida do restaurante 
+            try {
+                System.out.println("Cliente " + indice_clientes + " acaba de chegar no restaurante");
+                restaurante.entrar(indice_clientes);
+                Thread.sleep(2000); // Simular o tempo que o cliente passa sentado na mesa e resolve sair
+                restaurante.sair(indice_clientes);
+            } catch (InterruptedException e) {
+                System.out.println("Algo deu errado");
+            }
+        }).start();
+    }
 
-            assentos.release(); // Após terminar de comer, o cliente sai da mesa e libera espaço denytro dela
-
-        } catch (InterruptedException e) {
-            System.out.println("Erro na execução do programa");
+    public static void main(String[] args) {
+        // Criamos a main e rodamos as funções da classe do restaurante, nessa simulação, colocamos 100 clientes para testar o funcionamento do código
+        Restaurante restaurante = new Restaurante();
+        for (int i = 0; i < 100; i++) {
+            criar_clientes(restaurante, i);
+        
         }
     }
 }
 
-public class Restaurante {
-    public static void main(String[] args) {
-        for (int i = 0; i < 10; i++) {
-            Thread cliente = new Cliente(i);
-            cliente.start(); // Declaramos cada Thread dentro do loop e colocamos a Thread para rodar com o comando start()
-        } // Colocamos a classe do restaurante e dentro dela rodamos a main
 
-    }
-}
