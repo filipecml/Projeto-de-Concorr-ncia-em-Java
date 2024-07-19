@@ -1,0 +1,69 @@
+
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
+public class BanheiroUnisex {
+
+    private Semaphore catraca;
+    private int contador_homens;
+    private int contador_mulheres;
+    private Semaphore capacidade_total;
+    private ReentrantLock lock;
+    public BanheiroUnisex() {
+        catraca = new Semaphore(1);
+        contador_homens = 0;
+        contador_mulheres = 0;
+        capacidade_total = new Semaphore(3);
+        lock = new ReentrantLock();
+    }
+
+    public void entrar(String genero, int Indice) throws InterruptedException {
+        lock.lock();
+
+        try {
+            if (contador_homens == 0 && contador_mulheres == 0) {
+                System.out.println(genero + " de indice " + Indice + " acaba de entrar no banheiro unisex");
+                catraca.acquire();
+                capacidade_total.acquire();
+                if (genero.equals("Homem")) {
+                    contador_homens++;
+                } else {
+                    contador_mulheres++;
+                }
+            } else {
+                if (contador_homens == 3 || contador_mulheres == 3) {
+                    System.out.println("O indivíduo de indice " + Indice + " não conseguiu entrar pois o banheiro está cheio");
+                } else if (contador_homens != 0) {
+
+                    if (genero.equals("Homem")) {
+                        System.out.println(genero + " de indice " + Indice + " acaba de entrar no banheiro unisex");
+                        catraca.acquire();
+                        capacidade_total.acquire();
+                        contador_homens++;
+                    } else {
+                        System.out.println(genero + "de indice " + Indice + " não pode entrar no banheiro");
+                    }
+                } else {
+
+                    if (genero.equals("Mulher")) {
+                        System.out.println(genero + " de indice " + Indice + " acaba de entrar no banheiro unisex");
+                        catraca.acquire();
+                        capacidade_total.acquire();
+                        contador_mulheres++;
+                    } else {
+                        System.out.println(genero + "de indice " + Indice + " não pode entrar no banheiro");
+                    }
+                }
+            }
+
+        } finally {
+            lock.unlock();
+        }
+    }
+
+}
+
+// Criar uma função de entrar e sair do banheiro
+// função de entrar -> Primeiro verifica-se o genero, daí verificamos se há alguma pessoa do sexo oposto dentro do banheiro
+    // Caso exista alguma pessoa no banheiro do sexo oposto, a catraca tranca om individuo que quer entrar
+    // Caso não tenha ninguém, colocamos o individuo no banheiro
+    // Também colocamos essa pessoa caso a capacidade não esteja no limite e existam outras pessoas do mesmo sexo
