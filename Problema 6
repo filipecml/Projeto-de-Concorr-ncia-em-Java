@@ -29,6 +29,7 @@ public class BanheiroUnisex {
                 } else {
                     contador_mulheres++;
                 }
+                catraca.release();
             } else {
                 if (contador_homens == 3 || contador_mulheres == 3) {
                     System.out.println("O indivíduo de indice " + Indice + " não conseguiu entrar pois o banheiro está cheio");
@@ -39,6 +40,7 @@ public class BanheiroUnisex {
                         catraca.acquire();
                         capacidade_total.acquire();
                         contador_homens++;
+                        catraca.release();
                     } else {
                         System.out.println(genero + "de indice " + Indice + " não pode entrar no banheiro");
                     }
@@ -49,12 +51,28 @@ public class BanheiroUnisex {
                         catraca.acquire();
                         capacidade_total.acquire();
                         contador_mulheres++;
+                        catraca.release();
                     } else {
                         System.out.println(genero + "de indice " + Indice + " não pode entrar no banheiro");
                     }
                 }
             }
 
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void sair(String genero, int Indice) {
+        lock.lock();
+        try {
+            System.out.println(genero + " de indice " + Indice + " irá sair do banheiro unisex");
+            capacidade_total.release();
+            if (genero.equals("Homem")) {
+                contador_homens--;
+            } else {
+                contador_mulheres--;
+            }
         } finally {
             lock.unlock();
         }
