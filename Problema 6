@@ -1,13 +1,12 @@
-
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 public class BanheiroUnisex {
 
-    private Semaphore catraca;
+    final private Semaphore catraca;
     private int contador_homens;
     private int contador_mulheres;
-    private Semaphore capacidade_total;
-    private ReentrantLock lock;
+    final private Semaphore capacidade_total;
+    final private ReentrantLock lock;
     public BanheiroUnisex() {
         catraca = new Semaphore(1);
         contador_homens = 0;
@@ -15,7 +14,6 @@ public class BanheiroUnisex {
         capacidade_total = new Semaphore(3);
         lock = new ReentrantLock();
     }
-
     public void entrar(String genero, int Indice) throws InterruptedException {
         lock.lock();
 
@@ -62,7 +60,6 @@ public class BanheiroUnisex {
             lock.unlock();
         }
     }
-
     public void sair(String genero, int Indice) {
         lock.lock();
         try {
@@ -77,8 +74,35 @@ public class BanheiroUnisex {
             lock.unlock();
         }
     }
-
 }
+
+public class Main {
+
+    public static void main(String[] args) throws InterruptedException {
+        BanheiroUnisex banheiro = new BanheiroUnisex();
+
+        for (int i = 0; i < 100;i++) {
+            try {
+                if (i % 2 == 0) {
+                    banheiro.entrar("Homem", i);
+                    Thread.sleep(2500);
+                    banheiro.sair("Homem", i);
+                } else {
+                    banheiro.entrar("Mulher", i);
+                    Thread.sleep(2500);
+                    banheiro.sair("Mulher", i);
+                }
+            } catch (InterruptedException e) {
+                System.out.println("Erro na execução do programa");
+            }
+        }
+    }
+}
+
+
+
+
+
 
 // Criar uma função de entrar e sair do banheiro
 // função de entrar -> Primeiro verifica-se o genero, daí verificamos se há alguma pessoa do sexo oposto dentro do banheiro
