@@ -119,6 +119,8 @@ public class Sistema_Transporte {
            Pessoa passageiro = new Pessoa(transporte_publico, "Passageiro", i);
            Thread passageiro_thread = new Thread(passageiro);
            passageiro_thread.start();
+
+           Thread.sleep(250);
         }
     }
 }
